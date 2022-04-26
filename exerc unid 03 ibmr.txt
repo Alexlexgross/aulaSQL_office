@@ -1,0 +1,78 @@
+show databases;
+
+create database loja_virtual;
+
+use loja_virtual;
+
+show tables;
+
+create table cidade(
+	cod_cidade int(3) not null,
+	dcr_cidade varchar(50),
+	primary key(cod_cidade)
+	) default character set= utf8;
+	
+create table cliente(
+	codigo int auto_increment,
+	nome varchar(50),
+	cpf varchar(11)not null,
+	contato varchar(20),
+	data_nasc date,
+	sexo char('M','F'),
+	bairro varchar(50),
+	cod_cidade int(3) not null,
+	primary key (codigo),
+	foreign key fk_cidade (cod_cidade) references
+	cliente(cod_cidade)
+	) default character set= utf8;
+	
+insert into cidade values(021, 'Rio de Janeiro');
+insert into cidade values(011, 'São Paulo');
+insert into cidade values(031, 'Belo Horizonte');
+insert into cidade values(027, 'Vitória');
+insert into cidade values(071, 'Salvador'); 
+
+insert into cliente values(default, 'Paula Souza', '78965412345', '21999060302', 12/11/1992, 'F', 'Tijuca', 021);
+insert into cliente values(default, 'Joao Ventura', '34671593804', '21946354165', 31/04/2001, 'M', 'São Cristovão', 021);
+insert into cliente values(default, 'Richard Wagner', '45834795122', '21999347656', 02/01/2000, 'M', 'Praça da Bandeira', 021);
+insert into cliente values(default, 'Nelson Fernandes', '14732394211', '21992611148', 16/01/1958, 'M', 'Vila Isabel', 021);
+insert into cliente values(default, 'Ciro Gomes', '44312795488', '11974534775', 26/06/1981, 'M', 'Morumbi', 011);
+insert into cliente values(default, 'Elis Regina', '03484562137', '11993435617', 17/10/1986, 'F', 'Pinheiros', 011);
+insert into cliente values(default, 'Elza Soares', '42169725211', '11999937461', 10/07/1992, 'F', 'Mooca', 011);
+insert into cliente values(default, 'Leonel Brizola', '51246772302', '11912345746', 04/12/1982, 'M', 'Santo Amaro', 011);
+insert into cliente values(default, 'Énes Ribeiro', '30142299743', '31998114374', 07/12/1998, 'M', 'Savassi', 031);
+insert into cliente values(default, 'Arthur Antunes', '26101976666', '31974344647', 11/02/1970, 'M', 'Belvedere', 031);
+insert into cliente values(default, 'Janis Joplin', '22267411355', '31990134430', 22/03/1991, 'F', 'Belvedere', 031);
+insert into cliente values(default, 'Aline Morrisete', '77432314301', '31980841432', 29/01/1994, 'F', 'Anchieta' 031);
+insert into cliente values(default, 'Fernanda Torres', '34395287732', '27912043774', 29/07/2004, 'F', 'Parque Moscoso', 027);
+insert into cliente values(default, 'Suzana Vieira', '23202174561', '27903029141', 13/09/1698, 'F', 'Jardim da Penha', 027);
+insert into cliente values(default, 'Ivone Lara', '45732369601', '27994785274', 16/08/1992, 'F', 'Centro', 027);
+insert into cliente values(default, 'Gilberto Gil', '43912736414', '27901373166', 10/10/2000, 'M', 'Parque Moscoso', 027);
+insert into cliente values(default, 'Manoel Guarrincha', '05731224136', '7199901134674', 18/11/2003, 'M', 'Águas Claras', 071);
+insert into cliente values(default, 'Gerson Rivelino' , '74005643321', '71999212465', 22/05/2005, 'M', 'Aeroporto', 071);
+insert into cliente values(default, 'Andrade Guto', '099832365745', '71998756745', 13/11/1997, 'M', 'Aeroporto', 071);
+insert into cliente values(default, 'Divina Musa', '88575589614', '071541521456', 02/01/2003, 'F', 'Amaralina', 071);
+
+SELECT NOW() AS DATA_HORA;
+
+SELECT nome AS CLIENTES_HOMENS, contato FROM cliente
+where sexo= 'M';
+ 
+SELECT nome, cpf, bairro FROM cliente
+where cod_cidade = 011 AND sexo= 'F';
+
+SELECT  cpf, nome, FROM cliente
+where cod_cidade= 071 or bairro like 'Aeroporto';
+
+SELECT COUNT(*) AS "QUANT. DE REG. DA TABELA CLIENTE" FROM CLIENTE;
+
+SELECT SEXO, COUNT(*) FROM CLIENTE GROUP BY SEXO;
+
+select nome from cliente where cod_cidade= 031 or 027;
+
+update cliente
+set contato= '279888654321'
+where cpf = '45732369601';
+
+delete from cliente
+where nome = 'Énes Ribeiro';
