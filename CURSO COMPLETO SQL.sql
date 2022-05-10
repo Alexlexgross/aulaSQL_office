@@ -1862,3 +1862,438 @@ $
 DELIMITER ;
 
 INSERT INTO PRODUTO VALUES(NULL, 'LIVRO C#', 100.00);
+
+SELECT * FROM BACKUP.BKP_PRODUTO;
++-------+-----------+------------------+--------+
+| IDBKP | IDPRODUTO | NOME             | VALOR  |
++-------+-----------+------------------+--------+
+|     1 |      1000 | TESTE            |   0.00 |
+|     2 |         0 | LIVRO MODELAGEM  |  50.00 |
+|     3 |         0 | LIVRO BI         |  80.00 |
+|     4 |         0 | LIVRO ORACLE     |  70.00 |
+|     5 |         0 | LIVRO SQL SERVER | 100.00 |
+|     6 |         2 | LIVRO BI         |  80.00 |
+|     7 |         5 | LIVRO C#         | 100.00 |
++-------+-----------+------------------+--------+
+
+ALTER TABLE BACKUP.BKP_PRODUTO
+ADD EVENTO CHAR(1);
+
+ SELECT * FROM BACKUP.BKP_PRODUTO;
++-------+-----------+------------------+--------+--------+
+| IDBKP | IDPRODUTO | NOME             | VALOR  | EVENTO |
++-------+-----------+------------------+--------+--------+
+|     1 |      1000 | TESTE            |   0.00 | NULL   |
+|     2 |         0 | LIVRO MODELAGEM  |  50.00 | NULL   |
+|     3 |         0 | LIVRO BI         |  80.00 | NULL   |
+|     4 |         0 | LIVRO ORACLE     |  70.00 | NULL   |
+|     5 |         0 | LIVRO SQL SERVER | 100.00 | NULL   |
+|     6 |         2 | LIVRO BI         |  80.00 | NULL   |
+|     7 |         5 | LIVRO C#         | 100.00 | NULL   |
++-------+-----------+------------------+--------+--------+
+
+
+DROP TRIGGER BACKUP_PRODUTO_DEL;
+
+DELIMITER $
+
+CREATE TRIGGER BACKUP_PRODUTO_DEL
+BEFORE DELETE ON PRODUTO
+FOR EACH ROW
+BEGIN
+      INSERT INTO BACKUP.BKP_PRODUTO VALUES(NULL,OLD.IDPRODUTO,
+       OLD.NOME, OLD.VALOR, 'D');
+END
+$
+
+DELIMITER ;
+
+DELETE FROM PRODUTO WHERE IDPRODUTO = 4;
+
+SELECT * FROM PRODUTO;
+
+ SELECT * FROM BACKUP.BKP_PRODUTO;
+ +-------+-----------+------------------+--------+--------+
+| IDBKP | IDPRODUTO | NOME             | VALOR  | EVENTO |
++-------+-----------+------------------+--------+--------+
+|     1 |      1000 | TESTE            |   0.00 | NULL   |
+|     2 |         0 | LIVRO MODELAGEM  |  50.00 | NULL   |
+|     3 |         0 | LIVRO BI         |  80.00 | NULL   |
+|     4 |         0 | LIVRO ORACLE     |  70.00 | NULL   |
+|     5 |         0 | LIVRO SQL SERVER | 100.00 | NULL   |
+|     6 |         2 | LIVRO BI         |  80.00 | NULL   |
+|     7 |         5 | LIVRO C#         | 100.00 | NULL   |
+|     8 |         4 | LIVRO SQL SERVER | 100.00 | D      |
++-------+-----------+------------------+--------+--------+
+
+/* TRIGGER DE AUDITORIA */
+
+DROP DATABASE LOJA;
+
+DROP DATABASE BACKUP;
+
+CREATE DATABASE LOJA;
+
+USE LOJA;
+
+
+CREATE TABLE PRODUTO(
+      IDPRODUTO INT PRIMARY KEY AUTO_INCREMENT,
+      NOME VARCHAR(30),
+      VALOR FLOAT(10, 2)
+);
+
+INSERT INTO PRODUTO VALUES(NULL, 'LIVRO MODELAGEM', 50.00);
+INSERT INTO PRODUTO VALUES(NULL, 'LIVRO BI', 80.00);
+INSERT INTO PRODUTO VALUES(NULL, 'LIVRO ORACLE', 70.00);
+INSERT INTO PRODUTO VALUES(NULL, 'LIVRO SQL SERVER', 100.00);
+
+SELECT * FROM PRODUTO;
+
+CREATE DATABASE BACKUP;
+
+USE BACKUP;
+
+SELECT NOW();
+
+SELECT CURRENT_USER();
+
+
+CREATE TABLE BKP_PRODUTO(
+      IDBACKUP  INT PRIMARY KEY AUTO_INCREMENT,
+      IDPRODUTO INT,
+      NOME VARCHAR(30),
+      VALOR_ORIGINAL FLOAT(10, 2),
+      VALOR_ALTERADO FLOAT(10, 2),
+      DATA DATETIME,
+      USUARIO VARCHAR(30),
+      EVENTO CHAR(1)
+);
+
+DELIMITER $
+
+CREATE TRIGGER AUDIT_PROD
+AFTER UPDATE ON PRODUTO
+FOR EACH ROW
+BEGIN
+      INSERT INTO BACKUP.BKP_PRODUTO VALUES(NULL, OLD.IDPRODUTO, OLD.NOME,
+       OLD.VALOR, NEW.VALOR, NOW(), CURRENT_USER(), 'U');
+END
+$
+
+DELIMITER ;
+
+SELECT * FROM PRODUTO;
++-----------+------------------+--------+
+| IDPRODUTO | NOME             | VALOR  |
++-----------+------------------+--------+
+|         1 | LIVRO MODELAGEM  |  50.00 |
+|         2 | LIVRO BI         |  80.00 |
+|         3 | LIVRO ORACLE     |  70.00 |
+|         4 | LIVRO SQL SERVER | 100.00 |
++-----------+------------------+--------+
+
+SELECT * FROM BACKUP.BKP_PRODUTO;
+Empty set (0.00 sec)
+
+UPDATE PRODUTO SET VALOR = 110.00
+WHERE IDPRODUTO = 4;
+
+SELECT * FROM PRODUTO+-----------+------------------+--------+
+| IDPRODUTO | NOME             | VALOR  |
++-----------+------------------+--------+
+|         1 | LIVRO MODELAGEM  |  50.00 |
+|         2 | LIVRO BI         |  80.00 |
+|         3 | LIVRO ORACLE     |  70.00 |
+|         4 | LIVRO SQL SERVER | 110.00 |
+
+SELECT * FROM BACKUP.BKP_PRODUTO;
++----------+-----------+------------------+----------------+----------------+---------------------+----------------+--------+
+| IDBACKUP | IDPRODUTO | NOME             | VALOR_ORIGINAL | VALOR_ALTERADO | DATA                | USUARIO        | EVENTO |
++----------+-----------+------------------+----------------+----------------+---------------------+----------------+--------+
+|        1 |         4 | LIVRO SQL SERVER |         100.00 |         110.00 | 2022-05-05 21:46:58 | root@localhost | U      |
++----------+-----------+------------------+----------------+----------------+---------------------+----------------+--------+
+
+CREATE DATABASE AULA44;
+
+CREATE TABLE CURSOS(
+      IDCURSO INT PRIMARY KEY AUTO_INCREMENT,
+      NOME VARCHAR(30),
+      HORAS INT,
+      VALOR FLOAT(10, 2),
+      ID_PREREQ INT
+);
+
+ALTER TABLE CURSOS ADD CONSTRAINT FK_PREREQ
+FOREIGN KEY(ID_PREREQ) REFERENCES CURSOS(IDCURSO);
+
+INSERT INTO CURSOS VALUES(NULL, 'BD RELACIONAL', 20, 400.00, NULL);
+INSERT INTO CURSOS VALUES(NULL, 'BUSINESS INTELLIGENCE', 40, 800.00, 1);
+INSERT INTO CURSOS VALUES(NULL, 'RELATORIOS AVANÇADOS', 20, 600.00, 2);
+INSERT INTO CURSOS VALUES(NULL, 'LÓGICA PROGRAMAÇÃO', 20, 400.00, NULL);
+INSERT INTO CURSOS VALUES(NULL, 'RUBY', 30, 500.00, 4);
+
+SELECT * FROM CURSOS;
+
+SELECT NOME, VALOR, IFNULL(ID_PREREQ, "SEM REQ") REQUISITO
+FROM CURSOS;
+
+DELETE FROM CURSOS
+WHERE NOME = 'BUSINESS INTELLIGENCE';
+
+SELECT 
+C.NOME AS CURSO,
+C.VALOR AS VALOR,
+C.HORAS AS CARGA,
+IFNULL(P.NOME, '---') AS PREREQ
+FROM CURSOS C
+INNER JOIN CURSOS P
+ON P.IDCURSO = C.ID_PREREQ;
++-----------------------+--------+-------+-----------------------+
+| CURSO                 | VALOR  | CARGA | PREREQ                |
++-----------------------+--------+-------+-----------------------+
+| BUSINESS INTELLIGENCE | 800.00 |    40 | BD RELACIONAL         |
+| RELATORIOS AVANÇADOS  | 600.00 |    20 | BUSINESS INTELLIGENCE |
+| RUBY                  | 500.00 |    30 | LÓGICA PROGRAMAÇÃO    |
++-----------------------+--------+-------+-----------------------+
+
+/* AO INVÉS DE FAZER UM INNER JOIN FARÍAMOS UM LEFT JOIN */
+
+SELECT 
+C.NOME AS CURSO,
+C.VALOR AS VALOR,
+C.HORAS AS CARGA,
+IFNULL(P.NOME, '---') AS PREREQ
+FROM CURSOS C LEFT JOIN CURSOS P
+ON P.IDCURSO = C.ID_PREREQ;
++-----------------------+--------+-------+-----------------------+
+| CURSO                 | VALOR  | CARGA | PREREQ                |
++-----------------------+--------+-------+-----------------------+
+| BD RELACIONAL         | 400.00 |    20 | ---                   |
+| BUSINESS INTELLIGENCE | 800.00 |    40 | BD RELACIONAL         |
+| RELATORIOS AVANÇADOS  | 600.00 |    20 | BUSINESS INTELLIGENCE |
+| LÓGICA PROGRAMAÇÃO    | 400.00 |    20 | ---                   |
+| RUBY                  | 500.00 |    30 | LÓGICA PROGRAMAÇÃO    |
++-----------------------+--------+-------+-----------------------+
+
+/* CURSORES (FUNÇÃO SIMILAR A UM LOOPING) */
+
+CREATE DATABASE CURSORES;
+USE CURSORES;
+
+CREATE TABLE VENDEDORES(
+      IDVENDEDOR INT PRIMARY KEY AUTO_INCREMENT,
+      NOME VARCHAR(50),
+      JAN INT,
+      FEV INT,
+      MAR INT
+);
+
+INSERT INTO VENDEDORES VALUES(NULL, 'MAFRA',33432, 242334, 483225);
+INSERT INTO VENDEDORES VALUES(NULL, 'CLARA',26789, 294425, 597425);
+INSERT INTO VENDEDORES VALUES(NULL, 'JOAO',32456, 264521, 532455);
+INSERT INTO VENDEDORES VALUES(NULL, 'LILIAN',45789, 343654, 485454);
+INSERT INTO VENDEDORES VALUES(NULL, 'ANTONIO',32654, 268814, 495655);
+INSERT INTO VENDEDORES VALUES(NULL, 'GLORIA',31023, 264134, 457625);
+ 
+SELECT * FROM VENDEDORES;
+
+SELECT NOME, (JAN+ FEV + MAR) AS TOTAL FROM VENDEDORES;
+
+SELECT NOME, (JAN+ FEV + MAR) AS TOTAL,  (JAN+ FEV + MAR)/3 AS MEDIA FROM VENDEDORES;
+
+/* QUANDO ISSO CONSOME MUITO PROCESSAMENTO PODEMOS FAZER... */
+
+CREATE TABLE VEND_TOTAL(
+NOME VARCHAR(50),
+JAN INT,
+FEV INT,
+MARC INT,
+TOTAL INT,
+MEDIA INT
+);
+
+/* CURSORES SÃO PROGRAMAÇÕES COM PROCEDURES */
+
+DELIMITER $
+
+/* CREATE PROCEDURE INSEREDADOS()
+BEGIN
+      DECLARE FIM INT DEFAULT 0;
+      DECLARE VAR1, VAR2, VAR3, VTOTAL, VMEDIA INT;
+      DECLARE VNOME VARCHAR(50);
+
+      DECLARE REG CURSOR FOR(
+            SELECT NOME, JAN, FEV, MAR, FROM VENDEDORES
+      );
+
+      DECLARE CONTINUE HANDLER FOR NOT FOUND SET FIM = 1;
+
+      OPEN REG;
+
+      REPEAT
+
+          FETCH REG INTO VNOME, VAR1, VAR2, VAR3;
+          IF NOT FIM THEN
+
+              SET VTOTAL = VAR1 + VAR2 + VAR3;
+              SET VMEDIA = VTOTAL / 3;
+
+              INSERT INTO VEND_TOTAL VALUES(VNOME, VAR1, VAR2, VAR3, VTOTAL, VMEDIA);
+          END IF;
+
+      UNTIL FIM END REPEAT;
+
+      CLOSE REG;
+
+END
+$ */
+
+
+CREATE PROCEDURE INSEREDADOS()
+BEGIN
+      DECLARE FIM INT DEFAULT 0;
+      DECLARE VAR1, VAR2, VAR3, VTOTAL, VMEDIA INT;
+      DECLARE VNOME VARCHAR(50);
+      DECLARE REG CURSOR FOR SELECT NOME, JAN, FEV, MAR FROM VENDEDORES;
+ DECLARE CONTINUE HANDLER FOR NOT FOUND SET FIM = 1;
+
+      OPEN REG;
+
+      REPEAT
+
+          FETCH REG INTO VNOME, VAR1, VAR2, VAR3;
+          IF NOT FIM THEN
+
+              SET VTOTAL = VAR1 + VAR2 + VAR3;
+              SET VMEDIA = VTOTAL / 3;
+
+              INSERT INTO VEND_TOTAL VALUES(VNOME, VAR1, VAR2, VAR3, VTOTAL, VMEDIA);
+          END IF;
+
+      UNTIL FIM END REPEAT;
+
+      CLOSE REG;
+
+END
+$
+
+DELIMITER ;
+
+SELECT * FROM VENDEDORES;
++------------+---------+-------+--------+--------+
+| IDVENDEDOR | NOME    | JAN   | FEV    | MAR    |
++------------+---------+-------+--------+--------+
+|          1 | MAFRA   | 33432 | 242334 | 483225 |
+|          2 | CLARA   | 26789 | 294425 | 597425 |
+|          3 | JOAO    | 32456 | 264521 | 532455 |
+|          4 | LILIAN  | 45789 | 343654 | 485454 |
+|          5 | ANTONIO | 32654 | 268814 | 495655 |
+|          6 | GLORIA  | 31023 | 264134 | 457625 |
++------------+---------+-------+--------+--------+
+
+SELECT * FROM VEND_TOTAL;
+Empty set (0.00 sec)
+
+CALL INSEREDADOS();
+
+
+SELECT * FROM VEND_TOTAL;
++---------+-------+--------+--------+--------+--------+
+| NOME    | JAN   | FEV    | MARC   | TOTAL  | MEDIA  |
++---------+-------+--------+--------+--------+--------+
+| MAFRA   | 33432 | 242334 | 483225 | 758991 | 252997 |
+| CLARA   | 26789 | 294425 | 597425 | 918639 | 306213 |
+| JOAO    | 32456 | 264521 | 532455 | 829432 | 276477 |
+| LILIAN  | 45789 | 343654 | 485454 | 874897 | 291632 |
+| ANTONIO | 32654 | 268814 | 495655 | 797123 | 265708 |
+| GLORIA  | 31023 | 264134 | 457625 | 752782 | 250927 |
++---------+-------+--------+--------+--------+--------+
+
+/* NORMALIZANDO MAIS  AULA 89 */
+
+/* PRIMEIRA FORMA NORMAL FN
+ATOMICIDADE - UM CAMPO NÃO PODE SER DIVISÍVEL
+UM CAMPO NÃO PODE SER VETORIZADO 
+PK CHAVE PRIMÁRIA 
+*/
+
+CREATE DATABASE CONSULTORIO;
+
+USE CONSULTORIO;
+
+CREATE TABLE PACIENTE(
+    IDPACIENTE INT PRIMARY KEY AUTO_INCREMENT,
+    NOME VARCHAR(30),
+    SEXO CHAR(1),
+    EMAIL VARCHAR (30),
+    NASCIMENTO DATE
+);
+
+CREATE TABLE MEDICO(
+    IDMEDICO INT PRIMARY KEY AUTO_INCREMENT,
+    NOME VARCHAR(30),
+    SEXO CHAR(1),
+    ESPECIALIDADE VARCHAR(30),
+    FUNCIONARIO ENUM('S', 'N')
+);
+
+CREATE TABLE HOSPITAL(
+    IDHOSPITAL INT PRIMARY KEY AUTO_INCREMENT,
+    NOME VARCHAR(30),
+    BAIRRO VARCHAR (30),
+    CIDADE VARCHAR(30),
+    ESTADO CHAR(2)
+);
+
+CREATE TABLE CONSULTA(
+    IDCONSULTA  INT PRIMARY KEY AUTO_INCREMENT,
+    ID_PACIENTE INT,
+    ID_MEDICO INT,
+    ID_HOSPITAL INT,
+    DATA DATETIME,
+    DIAGNOSTICO VARCHAR(50)
+);
+
+CREATE TABLE INTERNACAO(
+    IDINTERNACAO  INT PRIMARY KEY AUTO_INCREMENT,
+    ENTRADA DATETIME,
+    QUARTO INT,
+    SAIDA DATETIME,
+    OBSERVACOES VARCHAR(50),
+    ID_CONSULTA INT UNIQUE
+);
+
+/* CRIANDO AS CONSTRAINT COM ALTER TABLE - CORREÇÃO COD DO OBJ
+(PK, FK) _ TABELA PERTENCENTE _ TABELA DE ONDE VEM */
+
+ALTER TABLE CONSULTA ADD CONSTRAINT FK_CONSULTA_PACIENTE
+FOREIGN KEY(ID_PACIENTE) REFERENCES PACIENTE(IDPACIENTE);
+
+ALTER TABLE CONSULTA ADD CONSTRAINT FK_CONSULTA_MEDICO
+FOREIGN KEY(ID_MEDICO) REFERENCES MEDICO(IDMEDICO);
+
+ALTER TABLE CONSULTA ADD CONSTRAINT FK_CONSULTA_HOSPITAL
+FOREIGN KEY(ID_HOSPITAL) REFERENCES HOSPITAL(IDHOSPITAL);
+
+ALTER TABLE INTERNACAO ADD CONSTRAINT FK_INTERNACAO_CONSULTA
+FOREIGN KEY(ID_CONSULTA) REFERENCES CONSULTA(IDCONSULTA);
+
+/* VERIFICANDO DICIONARIO COMO FAZER */ 
+SHOW DATABASES;
+USE information_schema;
+SHOW TABLES;
+DESC TABLE_CONSTRAINTS;
+SELECT * FROM  TABLE_CONSTRAINTS;
+| def                | consultorio       | PRIMARY                   | consultorio  | consulta                  | PRIMARY KEY     |
+| def                | consultorio       | FK_CONSULTA_HOSPITAL      | consultorio  | consulta                  | FOREIGN KEY     |
+| def                | consultorio       | FK_CONSULTA_MEDICO        | consultorio  | consulta                  | FOREIGN KEY     |
+| def                | consultorio       | FK_CONSULTA_PACIENTE      | consultorio  | consulta                  | FOREIGN KEY     |
+| def                | consultorio       | PRIMARY                   | consultorio  | hospital                  | PRIMARY KEY     |
+| def                | consultorio       | PRIMARY                   | consultorio  | internacao                | PRIMARY KEY     |
+| def                | consultorio       | ID_CONSULTA               | consultorio  | internacao                | UNIQUE          |
+| def                | consultorio       | FK_INTERNACAO_CONSULTA    | consultorio  | internacao                | FOREIGN KEY     |
+| def                | consultorio       | PRIMARY                   | consultorio  | medico                    | PRIMARY KEY     |
+| def                | consultorio       | PRIMARY                   | consultorio  | paciente                  | PRIMARY KEY     |
+
+/* FIM MYSQL */
