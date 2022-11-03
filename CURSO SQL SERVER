@@ -1,0 +1,84 @@
+/* CLICAR EM NOVA CONSULTA */
+
+/* ASSUNTO DELIMITADOR
+	;
+ */
+
+ create database aula_sql
+ create database aula_sql02
+
+/* clicar em executar e atualizar F5 */
+
+/* a cada nova consulta aberta identifica o número da secção, 
+ou seja, o número do usuário, usar o menor número possível de 
+consultas para não travar o sistema */
+
+use aula_sql
+
+  create table teste(
+	nome varchar(30)
+ )
+/* */
+
+use aula_sql02
+ /* */
+
+create database BANCO01
+ 
+ use BANCO01
+
+  create table teste(
+    nome varchar(30)
+ )
+
+/* PARA SE TORNAR OS COMANDOS SQL DE ASSÍNCRONOS EM SÍNCRONOS
+DEVEMOS PÔR O COMANDO GO APÓS CADA SQL PARA ELE EXECUTAR EM ORDEM */
+
+use aula_sql02
+go
+
+create database BANCO01
+go
+
+ use BANCO01
+go
+
+  create table teste(
+    nome varchar(30)
+ )
+go
+
+/* RECONMENDÁVEL SEPARAR O BANCO DE DADOS DO SIST. OPER. 
+EM HDS DIFERENTES */
+
+/* SÃO CRIADOS DOIS BANCO DE DADOS O MDF E LDF, MASTER DATA FILE 
+(DADOS MESTRES EM ARQUIVO), LOG DATA FILE (LOGARITMOS DE DADOS EM
+ ARQUIVOS). O MDF É SÓ PARA DADOS DO SISTEMA, DADOS DO DICIONÁRIO DE 
+DADOS  */
+
+/* PARA APAGAR DATABASE PODE SE CLICAR EM CIMA COM BOTÃO DIREITO
+E EXCLUIR OU USAR O COMANDO
+
+drop datyabase aula_sql02
+go
+
+/* ORGANIZAR FISICAMENTE E LOGICAMENTE UM BANCO DE DADOS
+
+1- CRIAR O BANCO COM ARQUIVOS PARA OS SETORES DE MKT R RH
+CLICAR EM BANDO DE DADOS COM DIREITO EM NOVO BANCO DE DADOS, 
+DAR O NOME 
+2- CRIAR UM ARQUIVO GERAL
+3- DEIXAR O MDF APENAS COM O DICIONÁRIO DE DADOS
+IR EM GRUPO DE ARQUIVOS PARA CRIAR OS GRUPO, DESMARCAR O PRIMARY 
+E MARCAR O PADRÃO COMO O GA_GERAL
+4- CRIAR 2 GRUPOS DE ARQUIVOS (PRIMARY - MDF)
+*/
+
+use empresa
+go
+
+create table TB_EMPRESA(
+ID int,
+NOME varchar(50)
+)
+GO
